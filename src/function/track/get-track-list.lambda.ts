@@ -1,4 +1,9 @@
-import type { APIGatewayEvent, ProxyResult } from 'aws-lambda';
+import type {
+  APIGatewayEvent,
+  APIGatewayProxyEventV2,
+  APIGatewayProxyResultV2,
+  ProxyResult,
+} from 'aws-lambda';
 import { extractErrorMessage } from '../../helpers/error.helper';
 import { badRequest, internalServerError, ok } from '../../helpers/lambda.helper';
 import { log } from '../../helpers/logger';
@@ -6,7 +11,9 @@ import { TrackService } from '../../service/track.service';
 import type { TrackListResponse } from '../../types/components';
 
 const trackService = new TrackService();
-export async function handler(event: APIGatewayEvent): Promise<ProxyResult> {
+export async function handler(
+  event: APIGatewayEvent | APIGatewayProxyEventV2,
+): Promise<ProxyResult | APIGatewayProxyResultV2> {
   const queryLimitStr = event.queryStringParameters?.['limit'];
   const lastTrack = event.queryStringParameters?.['lastTrack'];
   const filterAds = event.queryStringParameters?.['filterAds'] != null;

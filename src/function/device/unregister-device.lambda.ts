@@ -1,11 +1,18 @@
-import type { APIGatewayEvent, ProxyResult } from 'aws-lambda';
+import type {
+  APIGatewayEvent,
+  APIGatewayProxyEventV2,
+  APIGatewayProxyResultV2,
+  ProxyResult,
+} from 'aws-lambda';
 import { extractErrorMessage } from '../../helpers/error.helper';
 import { badRequest, internalServerError, ok, stringIsValid } from '../../helpers/lambda.helper';
 import { log } from '../../helpers/logger';
 import { DeviceService } from '../../service/device.service';
 import type { DeviceToken } from '../../types/components';
 
-export async function handler(event: APIGatewayEvent): Promise<ProxyResult> {
+export async function handler(
+  event: APIGatewayEvent | APIGatewayProxyEventV2,
+): Promise<ProxyResult | APIGatewayProxyResultV2> {
   const tokenInfo: DeviceToken = JSON.parse(event.body!);
   if (
     !tokenInfo ||
