@@ -29,13 +29,17 @@ export async function getDeezerResults(
   limit = 20,
 ): Promise<DeezerSearchResponse | undefined> {
   try {
-    const q = `track:"${name}" artist:"${artist}"`;
+    const query = `${name} - ${artist}`;
     const url = new URL('https://api.deezer.com/search');
-    url.searchParams.set('q', q);
+    url.searchParams.set('q', query);
     url.searchParams.set('limit', String(limit));
+    const res = await fetch(url.toString(), {
+      headers: { Accept: 'application/json' },
+    });
 
-    const res = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
-    if (!res.ok) throw new Error(`Deezer search failed: ${res.status} ${res.statusText}`);
+    if (!res.ok) {
+      throw new Error(`Deezer search failed: ${res.status} ${res.statusText}`);
+    }
 
     return (await res.json()) as DeezerSearchResponse;
   } catch (err: unknown) {
