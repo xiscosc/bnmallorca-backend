@@ -6,7 +6,6 @@ import type { Construct } from 'constructs';
 import type { BnBuckets } from './bucket.construct';
 import type { BnTables } from './database.construct';
 import type { BnQueues } from './queue.construct';
-import type { BnSecrets } from './secret.construct';
 import type { BnTopics } from './topic.construct';
 
 const FUNCTION_DIR = `${__dirname}/../../src/function`;
@@ -54,7 +53,6 @@ export function createLambdas(
   { trackListTable, albumArtTable, deviceTable, scheduleTable }: BnTables,
   { albumArtBucket }: BnBuckets,
   { notificationsTopic }: BnTopics,
-  { spotifyClientId, spotifySecret }: BnSecrets,
 ): BnLambdas {
   const cacheAlbumArtLambda = createLambda(scope, `${envName}-cacheAlbumArtLambda`, envName, {
     memorySize: 256,
@@ -85,8 +83,6 @@ export function createLambdas(
       TRACK_LIST_TABLE: trackListTable.tableName,
       NOTIFICATION_TOPIC: notificationsTopic.topicArn,
       CACHE_LAMBDA_ARN: cacheAlbumArtLambda.functionArn,
-      SPOTIFY_CLIENT_ID: spotifyClientId.secretArn,
-      SPOTIFY_SECRET_ID: spotifySecret.secretArn,
     },
   });
 
@@ -135,8 +131,6 @@ export function createLambdas(
       TRACK_LIST_TABLE: trackListTable.tableName,
       NOTIFICATION_TOPIC: notificationsTopic.topicArn,
       CACHE_LAMBDA_ARN: cacheAlbumArtLambda.functionArn,
-      SPOTIFY_CLIENT_ID: spotifyClientId.secretArn,
-      SPOTIFY_SECRET_ID: spotifySecret.secretArn,
     },
   });
 

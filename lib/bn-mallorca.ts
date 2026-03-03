@@ -7,11 +7,6 @@ export class BnMallorcaApp extends App {
 
     const props = {
       envName: BnMallorcaApp.getFromEnv('ENV_NAME'),
-      spotifyClientIdArn: BnMallorcaApp.getFromEnv('SPOTIFY_CLIENT_ID_ARN'),
-      spotifySecretArn: BnMallorcaApp.getFromEnv('SPOTIFY_SECRET_ID_ARN'),
-      apiDomainName: BnMallorcaApp.getFromEnv('API_DOMAIN_NAME'),
-      apiDomainAPIGatewayDomainName: BnMallorcaApp.getFromEnv('API_DOMAIN_GATEWAY_NAME'),
-      apiDomainHostedZoneId: BnMallorcaApp.getFromEnv('API_DOMAIN_HOSTED_ZONE_ID'),
       centovaUrl: BnMallorcaApp.getFromEnv('CENTOVA_URL'),
       centovaStreamUrl: BnMallorcaApp.getFromEnv('CENTOVA_STREAM_URL'),
       trackSource: BnMallorcaApp.getFromEnv('TRACK_SOURCE'),

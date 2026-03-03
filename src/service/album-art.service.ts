@@ -1,10 +1,10 @@
 import { env } from '../config/env';
 import { log } from '../helpers/logger';
-import { findArtistInSpotifyTracks, isBNTrack } from '../helpers/track.helper';
+import { findArtistInDeezerTracks, isBNTrack } from '../helpers/track.helper';
 import { albumArtUrlToBuffer } from '../net/album-art.downloader';
+import { getDeezerResults } from '../net/deezer';
 import { triggerAsyncLambda } from '../net/lambda';
 import { getAlbumArtWithUrl, storeAlbumArtInS3 } from '../net/s3';
-import { getSpotifyResults } from '../net/spotify';
 import { AlbumArtRepository } from '../repository/album-art.repository';
 import type { AlbumArt, Track } from '../types/components';
 import type { AlbumArtDto } from '../types/components.dto';
@@ -15,7 +15,6 @@ export interface IAlbumCacheRequest {
   artist: string;
   albumArt: AlbumArt[];
 }
-
 export class AlbumArtService {
   private albumArtRepository: AlbumArtRepository;
 
@@ -49,13 +48,13 @@ export class AlbumArtService {
       return [];
     }
 
-    const spotifyAlbumArt = await AlbumArtService.getAlbumArtFromSpotify(track);
-    if (spotifyAlbumArt.length > 0) {
+    const remoteAlbumArt = await AlbumArtService.getAlbumArtFromDeezer(track);
+    if (remoteAlbumArt.length > 0) {
       const cacheRequest: IAlbumCacheRequest = {
         trackId: track.id!,
         trackName: track.name,
         artist: track.artist,
-        albumArt: spotifyAlbumArt,
+        albumArt: remoteAlbumArt,
       };
       await triggerAsyncLambda(env.cacheLambdaArn, cacheRequest);
       log.info(
@@ -63,12 +62,12 @@ export class AlbumArtService {
           trackId: track.id,
           track: track.name,
           artist: track.artist,
-          source: 'spotify',
+          source: 'deezer',
           cacheLambdaTriggered: true,
         },
         'Got album art',
       );
-      return spotifyAlbumArt;
+      return remoteAlbumArt;
     }
 
     log.info(
@@ -104,19 +103,21 @@ export class AlbumArtService {
     return dto ? await AlbumArtService.transformAlbumArtDtoToModel(dto) : null;
   }
 
-  private static async getAlbumArtFromSpotify(track: Track): Promise<AlbumArt[]> {
-    const results = await getSpotifyResults(track.name, track.artist);
+  private static async getAlbumArtFromDeezer(track: Track): Promise<AlbumArt[]> {
+    const results = await getDeezerResults(track.name, track.artist);
     if (!results) {
       return [];
     }
-    const spotifyTrack = findArtistInSpotifyTracks(results.tracks.items, track.artist);
-    if (!spotifyTrack) {
+    const deezerTrack = findArtistInDeezerTracks(results.data, track.artist);
+    if (!deezerTrack || !deezerTrack.album?.md5_image) {
       return [];
     }
-    return spotifyTrack.album.images.map((img) => ({
-      downloadUrl: img.url,
-      size: `${img.height}x${img.width}`,
-    }));
+
+    return AlbumArtService.buildDeezerCoverUrlsFromMd5(deezerTrack.album.md5_image, [
+      '640x640',
+      '300x300',
+      '64x64',
+    ]);
   }
 
   private static async transformAlbumArtDtoToModel(dto: AlbumArtDto): Promise<AlbumArt[]> {
@@ -131,5 +132,14 @@ export class AlbumArtService {
     if (buffer === undefined) return undefined;
     await storeAlbumArtInS3(trackId, albumArt.size, buffer);
     return albumArt.size;
+  }
+
+  private static buildDeezerCoverUrlsFromMd5(md5: string, sizes: string[]): AlbumArt[] {
+    const base = `https://cdn-images.dzcdn.net/images/cover/${md5}`;
+
+    return sizes.map((size) => ({
+      downloadUrl: `${base}/${size}-000000-80-0-0.jpg`,
+      size,
+    }));
   }
 }

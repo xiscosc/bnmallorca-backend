@@ -10,8 +10,6 @@ export const env = {
   cacheLambdaArn: process.env['CACHE_LAMBDA_ARN'] ?? '',
   registerDeviceLambdaArn: process.env['REGISTER_DEVICE_LAMBDA_ARN'] ?? '',
   notificationTopicArn: process.env['NOTIFICATION_TOPIC'] ?? '',
-  spotifyClientIdArn: process.env['SPOTIFY_CLIENT_ID'] ?? '',
-  spotifySecretIdArn: process.env['SPOTIFY_SECRET_ID'] ?? '',
   jwtSecretArn: process.env['JWT_SECRET_ARN'] ?? '',
   centovaUrl: process.env['CENTOVA_URL'] ?? '',
   pollQueueUrl: process.env['POLL_QUEUE_URL'] ?? '',

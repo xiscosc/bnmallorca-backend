@@ -6,8 +6,8 @@ Backend and infrastructure for the BN Mallorca Radio App. This is a serverless A
 ## Technology Stack
 - **Infrastructure**: AWS CDK (TypeScript)
 - **Runtime**: Node.js with TypeScript
-- **AWS Services**: Lambda, DynamoDB, S3, SNS, SQS, Secrets Manager
-- **External APIs**: Spotify API, Icecast metadata streaming
+- **AWS Services**: Lambda, DynamoDB, S3, SNS, SQS
+- **External APIs**: Deezer API, Icecast metadata streaming
 - **Testing**: Jest
 - **Code Quality**: Biome (linter/formatter)
 
@@ -25,7 +25,7 @@ bn_mallorca_backend/
 │   │   ├── device/       # Device subscription management
 │   │   ├── schedule/     # Radio schedule endpoints
 │   │   └── track/        # Track metadata polling
-│   ├── net/              # External service clients (S3, SNS, Spotify, etc.)
+│   ├── net/              # External service clients (S3, SNS, Deezer, etc.)
 │   ├── repository/       # Data access layer (DynamoDB)
 │   ├── types/            # TypeScript type definitions
 │   └── config/           # Configuration
@@ -39,16 +39,18 @@ bn_mallorca_backend/
 Continuously polls Icecast metadata streams to track currently playing songs. See `docs/pollingsongs.png` for architecture diagram.
 
 ### Album Art Caching
-Fetches and caches album artwork using Spotify API and stores in S3. See `docs/albumartcache.png` for architecture.
+Fetches and caches album artwork using Deezer API and stores in S3. See `docs/albumartcache.png` for architecture.
 
 ### Device Subscriptions
 Manages push notification subscriptions for mobile devices via SNS. See `docs/subscriptions.png` for architecture.
 
 ### Recent Changes
+- Migrated from Spotify API to Deezer API for album art (no credentials required)
+- Removed AWS Secrets Manager (no longer needed without Spotify)
+- Removed custom API domain configuration (Route53, API Gateway custom domain)
+- Simplified to HTTP API with throttling
 - Added Icecast metadata streaming support using `icecast-metadata-js`
 - Improved track metadata parsing with artist name deduplication
-- Enhanced character encoding handling in Icecast metadata
-- Added 'promo' to track names in metadata updates
 
 ## Development Commands
 ```bash
@@ -90,11 +92,11 @@ Repositories in `src/repository/`:
 
 ## External Integrations
 Files in `src/net/`:
-- `spotify.ts` - Spotify Web API integration
+- `deezer.ts` - Deezer API integration (public, no auth required)
 - `metadata.ts` - Icecast metadata streaming
 - `centova.downloader.ts` - Centova Cast integration
 - `album-art.downloader.ts` - Album artwork downloading
-- `s3.ts`, `sns.ts`, `lambda.ts`, `secrets-manager.ts` - AWS service clients
+- `s3.ts`, `sns.ts`, `lambda.ts` - AWS service clients
 
 ## Configuration
 - `tsconfig.json` - TypeScript configuration with strict mode
@@ -110,9 +112,6 @@ The OpenAPI specification is available in `open-api.v1.json` with generated Type
 Uses Jest with TypeScript support. Mock utilities available via `jest-mock-extended` and `jest-when`.
 
 ## Important Notes
-- This is a worktree at: `/Users/xiscosastre/.claude-worktrees/bn_mallorca_backend/upbeat-boyd`
-- Current branch: `upbeat-boyd`
-- Main branch: `main`
 - CI/CD: GitHub Actions workflow for AWS deployment (see `.github/`)
 
 ## Common Tasks
@@ -135,7 +134,6 @@ Key files:
 - Keep data access logic separate from Lambda handlers
 
 ## Dependencies of Note
-- `@spotify/web-api-ts-sdk` - Spotify API client
 - `icecast-metadata-js` - Icecast metadata stream parsing
 - `lambda-log` - Structured logging
 - `luxon` - Date/time handling

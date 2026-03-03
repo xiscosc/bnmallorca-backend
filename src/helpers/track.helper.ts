@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import type { Track as SpotifyTrack } from '@spotify/web-api-ts-sdk';
+import type { DeezerTrack } from '../net/deezer';
 import type { Track } from '../types/components';
 import { getTs } from './time.helper';
 
@@ -48,18 +48,16 @@ export function cleanUnknownTrack(track: Track): Track {
   return track;
 }
 
-export function findArtistInSpotifyTracks(
-  tracks: SpotifyTrack[],
+export function findArtistInDeezerTracks(
+  tracks: DeezerTrack[],
   artist: string,
-): SpotifyTrack | undefined {
+): DeezerTrack | undefined {
   const normalizedArtist = normalizeString(artist);
   for (let i = 0; i < tracks.length; i += 1) {
     const track = tracks[i]!;
-    const { artists } = track;
-    for (let j = 0; j < artists.length; j += 1) {
-      if (artistsAreSimilar(normalizeString(artists[j]!.name), normalizedArtist)) {
-        return track;
-      }
+    const { artist } = track;
+    if (artistsAreSimilar(normalizeString(artist.name), normalizedArtist)) {
+      return track;
     }
   }
 

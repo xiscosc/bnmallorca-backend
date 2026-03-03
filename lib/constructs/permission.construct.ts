@@ -4,7 +4,6 @@ import type { BnBuckets } from './bucket.construct';
 import type { BnTables } from './database.construct';
 import type { BnLambdas } from './lambda.construct';
 import type { BnQueues } from './queue.construct';
-import type { BnSecrets } from './secret.construct';
 import type { BnTopics } from './topic.construct';
 
 export function createPermissions(
@@ -29,7 +28,6 @@ export function createPermissions(
   }: BnLambdas,
   { pollingQueue }: BnQueues,
   { albumArtBucket }: BnBuckets,
-  { spotifyClientId, spotifySecret }: BnSecrets,
 ) {
   cacheAlbumArtLambda.grantInvoke(processNewTrackLambda);
   cacheAlbumArtLambda.grantInvoke(pollNewTrackLambda);
@@ -51,11 +49,6 @@ export function createPermissions(
 
   notificationsTopic.grantPublish(processNewTrackLambda);
   notificationsTopic.grantPublish(pollNewTrackLambda);
-
-  spotifySecret.grantRead(processNewTrackLambda);
-  spotifySecret.grantRead(pollNewTrackLambda);
-  spotifyClientId.grantRead(processNewTrackLambda);
-  spotifyClientId.grantRead(pollNewTrackLambda);
 
   pollingQueue.grantSendMessages(fillQueueLambda);
 

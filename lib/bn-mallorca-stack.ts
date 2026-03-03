@@ -6,17 +6,11 @@ import { createTables } from './constructs/database.construct';
 import { createLambdas } from './constructs/lambda.construct';
 import { createPermissions } from './constructs/permission.construct';
 import { createQueues } from './constructs/queue.construct';
-import { createSecrets } from './constructs/secret.construct';
 import { createTopics } from './constructs/topic.construct';
 import { createTriggers } from './constructs/trigger.construct';
 
 interface BnMallorcaStackProps extends StackProps {
   envName: string;
-  spotifyClientIdArn: string;
-  spotifySecretArn: string;
-  apiDomainName: string;
-  apiDomainAPIGatewayDomainName: string;
-  apiDomainHostedZoneId: string;
   centovaUrl: string;
   centovaStreamUrl: string;
   trackSource: string;
@@ -34,12 +28,6 @@ export class BnMallorcaStack extends Stack {
     const queues = createQueues(this, this.props.envName);
     const buckets = createBuckets(this, this.props.envName);
     const topics = createTopics(this, this.props.envName);
-    const secrets = createSecrets(
-      this,
-      this.props.envName,
-      this.props.spotifyClientIdArn,
-      this.props.spotifySecretArn,
-    );
     const lambdas = createLambdas(
       this,
       this.props.envName,
@@ -52,17 +40,9 @@ export class BnMallorcaStack extends Stack {
       tables,
       buckets,
       topics,
-      secrets,
     );
 
-    createApi(
-      this,
-      this.props.envName,
-      this.props.apiDomainName,
-      this.props.apiDomainAPIGatewayDomainName,
-      this.props.apiDomainHostedZoneId,
-      lambdas,
-    );
+    createApi(this, this.props.envName, lambdas);
 
     createTriggers(this, this.props.envName, queues, lambdas);
 
@@ -76,7 +56,6 @@ export class BnMallorcaStack extends Stack {
       lambdas,
       queues,
       buckets,
-      secrets,
     );
   }
 }
