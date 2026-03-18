@@ -29,28 +29,20 @@ bn_mallorca_backend/
 │   ├── repository/       # Data access layer (DynamoDB)
 │   ├── types/            # TypeScript type definitions
 │   └── config/           # Configuration
-├── docs/                  # Architecture diagrams
 └── open-api.v1.json      # API specification
 ```
 
 ## Key Features & Architecture
 
 ### Track Polling System
-Continuously polls Icecast metadata streams to track currently playing songs. See `docs/pollingsongs.png` for architecture diagram.
+Continuously polls Icecast metadata streams (with Centova fallback) to detect currently playing songs. An EventBridge rule triggers every minute, filling an SQS queue with staggered messages. Each message triggers a Lambda that checks for track changes, processes new tracks (fetches album art, stores in DynamoDB, publishes to SNS for push notifications).
 
 ### Album Art Caching
-Fetches and caches album artwork using Deezer API and stores in S3. See `docs/albumartcache.png` for architecture.
-
+Fetches and caches album artwork using the Deezer public API (no auth required). On cache miss, searches Deezer for the track, retrieves cover URLs in 3 sizes from the Deezer CDN, and asynchronously caches images in S3 with metadata in DynamoDB.
 ### Device Subscriptions
-Manages push notification subscriptions for mobile devices via SNS. See `docs/subscriptions.png` for architecture.
-
-### Recent Changes
-- Migrated from Spotify API to Deezer API for album art (no credentials required)
-- Removed AWS Secrets Manager (no longer needed without Spotify)
-- Removed custom API domain configuration (Route53, API Gateway custom domain)
-- Simplified to HTTP API with throttling
-- Added Icecast metadata streaming support using `icecast-metadata-js`
-- Improved track metadata parsing with artist name deduplication
+Manages push notification subscriptions for mobile devices via SNS. Handles registration (creates SNS platform endpoints and topic subscriptions), unregistration (soft disable), and scheduled cleanup of stale devices.
+### HTTP API
+API Gateway HTTP API with throttling serving track list, schedule, and device registration endpoints.
 
 ## Development Commands
 ```bash
