@@ -1,24 +1,9 @@
-import {
-  PutCommand,
-  type PutCommandInput,
-  QueryCommand,
-  type QueryCommandInput,
-} from '@aws-sdk/lib-dynamodb';
-import { env } from '../config/env';
 import type { TrackDto } from '../types/components.dto';
-import { DynamoRepository } from './dynamo-repository';
+import { TrackEntity } from './entities/track.entity';
 
-export class TrackListRepository extends DynamoRepository<TrackDto> {
-  constructor() {
-    super(env.trackListTable);
-  }
-
+export class TrackListRepository {
   public async putTrack(track: TrackDto) {
-    const input: PutCommandInput = {
-      TableName: this.table,
-      Item: track,
-    };
-    await this.client.send(new PutCommand(input));
+    await TrackEntity.put(track).go();
   }
 
   public async getLastTracks(
@@ -29,26 +14,33 @@ export class TrackListRepository extends DynamoRepository<TrackDto> {
       throw Error('Limit is not between 1 and 25');
     }
 
-    const input: QueryCommandInput = {
-      TableName: this.table,
-      Limit: limit,
-      ScanIndexForward: false,
-      ExpressionAttributeNames: { '#kn0': 'radio' },
-      ExpressionAttributeValues: { ':kv0': TrackListRepository.getPartitionKeyValue() },
-      KeyConditionExpression: '#kn0 = :kv0',
-    };
+    const radio = TrackListRepository.getPartitionKeyValue();
 
-    if (lastSongKey != null) {
-      input.ExclusiveStartKey = {
-        radio: TrackListRepository.getPartitionKeyValue(),
-        timestamp: lastSongKey,
-      };
+    const results = await TrackEntity.query.byRadio({ radio }).go({
+      order: 'desc',
+      limit,
+      cursor:
+        lastSongKey != null
+          ? JSON.stringify({
+              radio,
+              timestamp: lastSongKey,
+            })
+          : undefined,
+    });
+
+    const tracksDto = results.data as Array<TrackDto>;
+    let lastKey: number | undefined;
+
+    if (results.cursor) {
+      try {
+        const parsed = JSON.parse(results.cursor) as Record<string, unknown>;
+        lastKey = parsed['timestamp'] as number | undefined;
+      } catch {
+        lastKey = undefined;
+      }
     }
 
-    const results = await this.client.send(new QueryCommand(input));
-    const tracksDto = results.Items as Array<TrackDto>;
-    const lastKeyDb = results.LastEvaluatedKey?.['timestamp'] ?? undefined;
-    return { tracksDto, lastKey: lastKeyDb };
+    return { tracksDto, lastKey };
   }
 
   public static getPartitionKeyValue(): string {
