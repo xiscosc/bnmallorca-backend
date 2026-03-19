@@ -3,7 +3,7 @@ import { TrackEntity } from './entities/track.entity';
 
 export class TrackListRepository {
   public async putTrack(track: TrackDto) {
-    await TrackEntity.put(track).go();
+    await TrackEntity.put(track).go({ ignoreOwnership: true });
   }
 
   public async getLastTracks(
@@ -19,6 +19,7 @@ export class TrackListRepository {
     const results = await TrackEntity.query.byRadio({ radio }).go({
       order: 'desc',
       limit,
+      ignoreOwnership: true,
       cursor:
         lastSongKey != null
           ? JSON.stringify({

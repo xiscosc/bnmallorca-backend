@@ -5,7 +5,7 @@ import { ScheduleEntity } from './entities/schedule.entity';
 export class ScheduleRepository {
   public async getFullSchedule(): Promise<ShowDto[]> {
     try {
-      const result = await ScheduleEntity.scan.go({ pages: 'all' });
+      const result = await ScheduleEntity.scan.go({ pages: 'all', ignoreOwnership: true });
       return result.data as ShowDto[];
     } catch (err) {
       log.error(`Error getting schedule from db ${err}`);
