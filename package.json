@@ -46,6 +46,7 @@
     "@aws-sdk/lib-dynamodb": "3.971.0",
     "aws-cdk-lib": "2.235.0",
     "constructs": "10.4.5",
+    "electrodb": "3.7.2",
     "icecast-metadata-js": "^1.2.9",
     "lodash": "4.17.21",
     "luxon": "3.7.2",

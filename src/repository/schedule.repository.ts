@@ -1,30 +1,15 @@
-import { ScanCommand, type ScanCommandInput } from '@aws-sdk/lib-dynamodb';
-import { env } from '../config/env';
 import { log } from '../helpers/logger';
 import type { ShowDto } from '../types/components.dto';
-import { DynamoRepository } from './dynamo-repository';
+import { ScheduleEntity } from './entities/schedule.entity';
 
-export class ScheduleRepository extends DynamoRepository<ShowDto> {
-  constructor() {
-    super(env.scheduleTable);
-  }
-
+export class ScheduleRepository {
   public async getFullSchedule(): Promise<ShowDto[]> {
-    const params: ScanCommandInput = {
-      TableName: this.table,
-    };
-
-    let result: ShowDto[] = [];
     try {
-      do {
-        const data = await this.client.send(new ScanCommand(params));
-        result = result.concat((data.Items as ShowDto[]) ?? []);
-        params.ExclusiveStartKey = data.LastEvaluatedKey;
-      } while (params.ExclusiveStartKey);
+      const result = await ScheduleEntity.scan.go({ pages: 'all' });
+      return result.data as ShowDto[];
     } catch (err) {
       log.error(`Error getting schedule from db ${err}`);
+      return [];
     }
-
-    return result;
   }
 }
