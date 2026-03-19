@@ -5,7 +5,7 @@ Backend and infrastructure for the BN Mallorca Radio App. This is a serverless A
 
 ## Technology Stack
 - **Infrastructure**: AWS CDK (TypeScript)
-- **Runtime**: Node.js with TypeScript
+- **Runtime**: Node.js with TypeScript (uses **bun** as package manager)
 - **AWS Services**: Lambda, DynamoDB, S3, SNS, SQS
 - **External APIs**: Deezer API, Icecast metadata streaming
 - **Testing**: Jest
@@ -47,24 +47,27 @@ API Gateway HTTP API with throttling serving track list, schedule, and device re
 ## Development Commands
 ```bash
 # Build
-npm run build
+bun run build
 
 # Watch mode
-npm run watch
+bun run watch
 
 # Run tests
-npm test
+bun run test
 
 # Linting
-npm run biome        # Check code
-npm run biome:fix    # Auto-fix issues
+bun run biome        # Check code
+bun run biome:fix    # Auto-fix issues
 
 # CDK operations
-npm run cdk deploy
-npm run cdk synth
+bun run cdk deploy
+bun run cdk synth
 
 # Generate OpenAPI types
-npm run generate:openapi
+bun run generate:openapi
+
+# Install dependencies
+bun install
 ```
 
 ## Lambda Functions (11 total)
@@ -75,12 +78,15 @@ Located in `src/function/`:
 - **Track**: Track metadata polling, queue management, and metadata updates
 
 ## Data Layer
-Repositories in `src/repository/`:
+Uses **ElectroDB** for DynamoDB access. Entity definitions live in `src/repository/entities/` and repositories in `src/repository/`:
+- `entities/track.entity.ts` - Track ElectroDB entity
+- `entities/album-art.entity.ts` - Album art ElectroDB entity
+- `entities/device.entity.ts` - Device ElectroDB entity
+- `entities/schedule.entity.ts` - Schedule ElectroDB entity
 - `device.repository.ts` - Device subscription data
 - `schedule.repository.ts` - Radio schedule data
 - `album-art.repository.ts` - Album art cache
 - `track-list.repository.ts` - Track history
-- `dynamo-repository.ts` - Base DynamoDB operations
 
 ## External Integrations
 Files in `src/net/`:
@@ -122,12 +128,14 @@ Key files:
 
 ### Working with DynamoDB
 - Use repository pattern in `src/repository/`
-- Extend `dynamo-repository.ts` for common operations
+- Define ElectroDB entities in `src/repository/entities/` for schema, indexes, and query definitions
+- Repositories use ElectroDB entities for all DynamoDB operations (get, put, query, scan, delete)
 - Keep data access logic separate from Lambda handlers
 
 ## Dependencies of Note
+- `electrodb` - DynamoDB single-table design / entity modeling
 - `icecast-metadata-js` - Icecast metadata stream parsing
-- `lambda-log` - Structured logging
+- `pino` - Structured logging
 - `luxon` - Date/time handling
 - `lodash` - Utility functions
 - AWS SDK v3 clients for all AWS services
